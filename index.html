@@ -370,7 +370,12 @@ body.lock{overflow:hidden;}
       <div class="field"><label for="f_title">Job title</label>
         <input type="text" id="f_title" placeholder="Banquet server, brand ambassador…" autocomplete="off"></div>
       <div class="field"><label for="f_company">Company or agency <span class="hint">(optional)</span></label>
-        <input type="text" id="f_company" placeholder="Who is paying you" autocomplete="off"></div>
+        <select id="f_company"></select></div>
+      <div class="reveal" id="companyNew" style="padding-left:0;">
+        <div class="field"><label for="f_company_new">New company name</label>
+          <input type="text" id="f_company_new" placeholder="Type it once, pick it from the list forever" autocomplete="off"></div>
+        <button type="button" class="btn btn-ghost" id="saveCoBtn">Save company to the list</button>
+      </div>
       <div class="field"><label for="f_date">Date</label><input type="date" id="f_date"></div>
       <div class="row2">
         <div class="field"><label>Call time</label>
@@ -624,7 +629,7 @@ body.lock{overflow:hidden;}
 var KEY = "shift-ledger-v1";
 var LATE_DAYS = 30;
 var ITEM = 36;
-var state = { jobs: [] };
+var state = { jobs: [], companies: [] };
 var filterMode = "all";
 var editingId = null;
 var curPT = "hourly";
@@ -635,7 +640,10 @@ function load(){
     var raw = localStorage.getItem(KEY);
     if(raw){
       var p = JSON.parse(raw);
-      if(p && Array.isArray(p.jobs)) state = { jobs: p.jobs };
+      if(p && Array.isArray(p.jobs)){
+        state = { jobs: p.jobs,
+          companies: Array.isArray(p.companies) ? p.companies.filter(function(x){ return typeof x === "string" && x.trim(); }) : [] };
+      }
     }
   }catch(e){}
 }
@@ -744,6 +752,43 @@ function tSetMin(id, v){
   v = String(v == null || v === "" ? "30" : v);
   b.setAttribute("data-v", v);
   b.textContent = v + " min";
+}
+
+/* ---- company list ---- */
+function companyCanon(name){
+  name = (name || "").trim().toLowerCase();
+  if(!name) return null;
+  for(var i = 0; i < state.companies.length; i++){
+    if(state.companies[i].trim().toLowerCase() === name) return state.companies[i];
+  }
+  return null;
+}
+function ensureCompany(name){
+  name = (name || "").trim();
+  if(!name) return "";
+  var c = companyCanon(name);
+  if(c) return c;
+  state.companies.push(name);
+  return name;
+}
+function seedCompaniesFromJobs(){
+  state.jobs.forEach(function(j){
+    var v = (j.company || "").trim();
+    if(v && !companyCanon(v)) state.companies.push(v);
+  });
+}
+function buildCompanyOptions(sel){
+  var list = state.companies.slice().sort(function(a, b){
+    return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
+  });
+  var html = '<option value="">None</option>';
+  list.forEach(function(c){
+    html += '<option value="' + esc(c) + '">' + esc(c) + "</option>";
+  });
+  html += '<option value="__new__">Add new company…</option>';
+  var el = $("f_company");
+  el.innerHTML = html;
+  el.value = sel === "__new__" ? "__new__" : (companyCanon(sel) || "");
 }
 
 /* ---- pay math ---- */
@@ -1179,6 +1224,7 @@ function dupCreate(){
   var keys = Object.keys(dupSel).sort();
   if(!keys.length){ toast("Pick at least one date on the calendar."); return; }
   var base = readForm();
+  base.company = ensureCompany(base.company);
   var h = $("dup_hours").value;
   var cf = $("dup_copyfit").checked;
   var now = Date.now();
@@ -1358,9 +1404,10 @@ function useSpan(){
 function resetForm(){
   editingId = null;
   $("formTitle").textContent = "New job";
-  ["f_title","f_company","f_loc","f_rate","f_hours","f_flat","f_hours2",
+  ["f_title","f_company_new","f_loc","f_rate","f_hours","f_flat","f_hours2",
    "f_pamt","f_fdate","f_finfo","f_fpamt","f_notes","f_pdate","f_recv"].forEach(function(id){ $(id).value = ""; });
   $("f_date").value = todayStr();
+  buildCompanyOptions("");
   tSetTime("f_start", "");
   tSetTime("f_out", "");
   tSetTime("f_ftime", "");
@@ -1377,7 +1424,10 @@ function resetForm(){
 
 function fillForm(j){
   $("f_title").value = j.title || "";
-  $("f_company").value = j.company || "";
+  var fco = (j.company || "").trim();
+  if(fco && !companyCanon(fco)) state.companies.push(fco);
+  buildCompanyOptions(fco);
+  $("f_company_new").value = "";
   $("f_date").value = j.date || "";
   tSetTime("f_start", j.start || "");
   tSetTime("f_out", j.out || "");
@@ -1412,7 +1462,7 @@ function fillForm(j){
 function readForm(){
   return {
     title: $("f_title").value.trim(),
-    company: $("f_company").value.trim(),
+    company: ($("f_company").value === "__new__" ? $("f_company_new").value : $("f_company").value).trim(),
     date: $("f_date").value,
     start: tGet("f_start"),
     out: tGet("f_out"),
@@ -1455,6 +1505,7 @@ function updateVis(){
   $("fitOpts").classList.toggle("on", $("f_fit").checked);
   $("fitPayOpts").classList.toggle("on", $("f_fitpaid").checked);
   $("paidOpts").classList.toggle("on", $("f_paid").checked);
+  $("companyNew").classList.toggle("on", $("f_company").value === "__new__");
   var pk = $("f_park").value;
   $("parkOpts").classList.toggle("on", pk !== "none");
   $("parkLabel").textContent = pk === "reimburse" ? "Amount to reimburse ($)" : "Parking cost ($, your expense)";
@@ -1505,6 +1556,7 @@ function saveJob(){
   var j = readForm();
   if(!j.title){ toast("Give the job a title first."); return; }
   if(!j.date){ toast("Pick the job date first."); return; }
+  j.company = ensureCompany(j.company);
   if(editingId){
     var i = state.jobs.findIndex(function(x){ return x.id === editingId; });
     if(i >= 0){
@@ -1538,7 +1590,7 @@ function deleteJob(){
 
 /* ---- backup ---- */
 function exportJSON(){
-  return JSON.stringify({ app: "shift-daddy", exported: new Date().toISOString(), jobs: state.jobs }, null, 2);
+  return JSON.stringify({ app: "shift-daddy", exported: new Date().toISOString(), jobs: state.jobs, companies: state.companies }, null, 2);
 }
 function exportCSV(){
   var cols = ["date","start","out","title","company","location","payType","rate","hours","flat",
@@ -1575,11 +1627,14 @@ function copyText(text, okMsg){
 function restore(){
   var raw = $("restoreBox").value.trim();
   if(!raw){ toast("Paste a backup into the box first."); return; }
-  var arr = null;
+  var arr = null, cosBak = [];
   try{
     var p = JSON.parse(raw);
     if(Array.isArray(p)) arr = p;
-    else if(p && Array.isArray(p.jobs)) arr = p.jobs;
+    else if(p && Array.isArray(p.jobs)){
+      arr = p.jobs;
+      if(Array.isArray(p.companies)) cosBak = p.companies.filter(function(x){ return typeof x === "string" && x.trim(); });
+    }
   }catch(e){}
   if(!arr){ toast("That doesn’t look like a Shift Daddy backup."); return; }
   arr = arr.filter(function(j){ return j && typeof j === "object"; });
@@ -1587,6 +1642,8 @@ function restore(){
   var msg = "Replace the " + state.jobs.length + " job(s) on this device with " + arr.length + " from this backup?";
   if(!confirm(msg)) return;
   state.jobs = arr;
+  state.companies = cosBak;
+  seedCompaniesFromJobs();
   if(persist()){
     $("restoreBox").value = "";
     render();
@@ -1597,7 +1654,7 @@ function restore(){
 }
 function renderCount(){
   var n = state.jobs.length;
-  $("dcount").textContent = n + (n === 1 ? " job" : " jobs") + " stored on this device (app v4)";
+  $("dcount").textContent = n + (n === 1 ? " job" : " jobs") + " stored on this device (app v5)";
 }
 
 /* ---- toast ---- */
@@ -1613,6 +1670,7 @@ function toast(msg){
 /* ---- wiring ---- */
 function init(){
   load();
+  seedCompaniesFromJobs();
 
   $("tab-home").addEventListener("click", function(){ render(); show("home"); });
   $("tab-add").addEventListener("click", openNew);
@@ -1681,6 +1739,18 @@ function init(){
   });
   $("useSpan1").addEventListener("click", useSpan);
   $("useSpan2").addEventListener("click", useSpan);
+
+  $("saveCoBtn").addEventListener("click", function(){
+    var name = $("f_company_new").value.trim();
+    if(!name){ toast("Type the company name first."); return; }
+    var had = !!companyCanon(name);
+    var canon = ensureCompany(name);
+    persist();
+    buildCompanyOptions(canon);
+    $("f_company_new").value = "";
+    updateVis();
+    toast(had ? "Already on the list, selected it." : "Company saved to the list");
+  });
 
   $("saveBtn").addEventListener("click", saveJob);
   $("dupBtn").addEventListener("click", openDup);

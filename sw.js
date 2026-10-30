@@ -1,4 +1,4 @@
-var CACHE = "shift-daddy-v4";
+var CACHE = "shift-daddy-v5";
 var ASSETS = [
   "./",
   "./index.html",
