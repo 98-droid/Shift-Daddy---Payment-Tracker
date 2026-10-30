@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shift Daddy">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Shift Daddy - Payment Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Great+Vibes&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  --bg:#000000; --surface:#121211; --sunken:#0C0C0B; --field:#0F0F0E;
+  --ink:#EDEDE8; --mut:#9C9C94; --faint:#6E6E67;
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.2);
+  --paid:#5CCB95; --paid-bg:#17382A; --paid-line:#2C5742;
+  --owe:#E3A84F; --owe-bg:#352A14; --owe-line:#5C4A26;
+  --late:#E7705F; --late-bg:#3D211D; --late-line:#5E342E;
+  --glow:rgba(227,168,79,.35);
+  --chrome:rgba(0,0,0,.72);
+  --btn:#EDEDE8; --btn-ink:#0A0A09;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.45;
+  -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent;
+}
+body::before{
+  content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px);
+  z-index:10; background:var(--chrome);
+  -webkit-backdrop-filter:saturate(1.4) blur(16px); backdrop-filter:saturate(1.4) blur(16px);
+}
+button,input,select,textarea{font-family:inherit; color:inherit;}
+button{cursor:pointer;}
+:focus-visible{outline:2px solid var(--ink); outline-offset:2px; border-radius:4px;}
+
+/* header */
+.top{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:9;
+  background:var(--chrome);
+  -webkit-backdrop-filter:saturate(1.4) blur(16px); backdrop-filter:saturate(1.4) blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.top-in{max-width:560px; margin:0 auto; height:52px; padding:0 16px;
+  display:flex; align-items:center; justify-content:space-between;}
+.logo{font-family:"Great Vibes","Snell Roundhand",cursive; font-weight:400; font-size:27px;
+  color:#FFFFFF; line-height:1; display:inline-block; transform:rotate(-5deg); padding-left:4px;}
+.glance{text-align:right; line-height:1.15;}
+.glance .gk{font-size:11px; color:var(--mut);}
+.glance .gv{font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--owe);}
+.glance .gv.zero{color:var(--mut); font-weight:600;}
+
+main{max-width:560px; margin:0 auto; padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px));}
+
+.view{display:none;}
+.view.on{display:block;}
+.hide{display:none !important;}
+
+/* overview hero */
+.hero{padding:12px 2px 4px;}
+.hero .hk{font-size:14px; color:var(--mut);}
+.hero .hv{font-size:44px; font-weight:800; letter-spacing:-0.02em; line-height:1.05;
+  font-variant-numeric:tabular-nums; color:var(--owe); margin-top:2px;
+  font-stretch:118%; text-shadow:0 0 28px var(--glow);}
+.hero .hv.zero{color:var(--ink); text-shadow:none;}
+.hero .hs{font-size:13px; color:var(--mut); margin-top:4px;}
+.hero-row{display:flex; gap:28px; margin-top:16px; padding-top:13px; border-top:1px solid var(--line2);}
+.hfig .fk{font-size:12px; color:var(--mut);}
+.hfig .fv{font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:1px;}
+.hfig .fv.green{color:var(--paid);}
+.hfig .fs{font-size:12px; color:var(--faint);}
+
+.owedby{margin-top:16px;}
+.owedby .k2{font-size:13px; font-weight:600; color:var(--mut); margin:0 2px 7px;}
+.chiprow{display:flex; flex-wrap:wrap; gap:7px;}
+.cochip{font-size:13px; font-weight:600; padding:6px 11px; border-radius:999px;
+  background:var(--owe-bg); color:var(--owe); border:1px solid var(--owe-line);
+  font-variant-numeric:tabular-nums;}
+
+.fitstrip{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
+.fitcard{display:flex; align-items:baseline; gap:9px; width:100%; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:10px 13px; font-size:13.5px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.fitcard .ftag{font-size:11px; font-weight:700; color:var(--btn-ink); background:var(--btn);
+  border-radius:6px; padding:2px 6px; letter-spacing:0.01em;}
+.fitcard .fwhen{font-weight:600; white-space:nowrap;}
+.fitcard .fwho{color:var(--mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* filter bar */
+.listbar{display:flex; gap:8px; align-items:stretch; margin:20px 0 4px;}
+.seg{display:flex; background:var(--sunken); border:1px solid var(--line);
+  border-radius:12px; padding:3px; gap:3px; flex:1;}
+.seg button{flex:1; padding:8px 4px; border:0; background:transparent; border-radius:9px;
+  font-size:13.5px; font-weight:600; color:var(--mut);}
+.seg button.on{background:var(--surface); color:var(--ink); border:1px solid var(--line2);}
+.fbtn{width:48px; border-radius:12px; border:1px solid var(--line); background:var(--sunken);
+  display:flex; align-items:center; justify-content:center; position:relative;}
+.fbtn svg{width:19px; height:19px; stroke:var(--mut); fill:none; stroke-width:1.9;
+  stroke-linecap:round; stroke-linejoin:round;}
+.fbtn.active{border-color:var(--line2);}
+.fbtn.active svg{stroke:var(--ink);}
+.fbtn .dot{position:absolute; top:7px; right:7px; width:8px; height:8px; border-radius:50%;
+  background:var(--owe); display:none; box-shadow:0 0 8px var(--glow);}
+.fbtn.active .dot{display:block;}
+.afrow{display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 2px;}
+.afchip{font-size:12.5px; font-weight:600; padding:6px 11px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line2); color:var(--ink);}
+.afchip.clearall{background:transparent; border-color:transparent; color:var(--late);}
+
+/* month sheets */
+.mh{display:flex; justify-content:space-between; align-items:baseline; margin:22px 4px 8px;}
+.mh h3{margin:0; font-size:16px; font-weight:700; letter-spacing:0; font-stretch:112%;}
+.mh .mt{font-size:12.5px; font-variant-numeric:tabular-nums; color:var(--mut);}
+.mh .mt b{color:var(--owe); font-weight:700;}
+.mh .mt .ok{color:var(--paid); font-weight:600;}
+.sheet{background:var(--surface); border:1px solid var(--line); border-radius:15px; overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.job{display:flex; justify-content:space-between; align-items:flex-start; gap:11px;
+  width:100%; text-align:left; background:transparent; border:0;
+  padding:13px 14px; font-size:16px;}
+.job + .job{border-top:1px solid var(--line);}
+.job:active{background:rgba(255,255,255,.05);}
+.ck{width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line2);
+  background:var(--field); flex-shrink:0; display:flex; align-items:center;
+  justify-content:center; padding:0; margin-top:3px;}
+.ck svg{width:15px; height:15px; stroke:var(--btn-ink); stroke-width:2.6; fill:none;
+  stroke-linecap:round; stroke-linejoin:round; opacity:0;}
+.ck.on{background:var(--paid); border-color:var(--paid); box-shadow:0 0 12px rgba(92,203,149,.3);}
+.ck.on svg{opacity:1;}
+.jl{min-width:0; flex:1;}
+.jt{font-weight:600; font-size:15px; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.js{font-size:12.5px; color:var(--mut); margin-top:2px;}
+.js2{font-size:12.5px; color:var(--faint); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.jc{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
+.chip{font-size:11.5px; font-weight:600; padding:3px 8px; border-radius:999px;
+  background:var(--sunken); color:var(--mut); border:1px solid var(--line);
+  font-variant-numeric:tabular-nums;}
+.chip.amber{background:var(--owe-bg); color:var(--owe); border-color:var(--owe-line);}
+.chipbtn{font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:999px;
+  background:transparent; color:var(--ink); border:1px dashed var(--line2);}
+.tadj{background:none; border:0; padding:0; font:inherit; color:var(--ink);
+  text-decoration:underline dotted; text-underline-offset:3px; font-variant-numeric:tabular-nums;}
+.jr{text-align:right; flex-shrink:0;}
+.jv{font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em;}
+.pill{display:inline-block; margin-top:6px; font-size:11.5px; font-weight:700;
+  padding:4px 9px; border-radius:999px; border:1px solid; font-variant-numeric:tabular-nums;}
+.pill.p-paid{background:var(--paid-bg); color:var(--paid); border-color:var(--paid-line);}
+.pill.p-unpaid{background:var(--owe-bg); color:var(--owe); border-color:var(--owe-line);}
+.pill.p-late{background:var(--late-bg); color:var(--late); border-color:var(--late-line);}
+
+/* empty state */
+.empty{margin-top:26px; text-align:left;}
+.empty h2{font-size:20px; font-weight:800; font-stretch:114%; margin:0 0 6px;}
+.empty p{color:var(--mut); font-size:14px; margin:0 0 14px; max-width:42ch;}
+
+/* form */
+.pagehead{font-size:21px; font-weight:800; font-stretch:114%; letter-spacing:0; margin:8px 2px 14px;}
+.fsheet{background:var(--surface); border:1px solid var(--line); border-radius:15px;
+  padding:14px; margin-bottom:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.ft{font-size:13px; font-weight:700; color:var(--mut); margin:0 0 10px;}
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:2px;}
+.field > label{display:block; font-size:13px; font-weight:600; margin:0 1px 5px;}
+.field .hint{font-weight:400; color:var(--faint);}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%; padding:11px 13px; border:1px solid var(--line2); border-radius:11px;
+  background:var(--field); color:var(--ink); font-size:16px; appearance:none; -webkit-appearance:none;
+  min-height:46px;
+}
+textarea{min-height:84px; resize:vertical;}
+select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23767670' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat; background-position:right 13px center; padding-right:36px;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--ink); outline:none;}
+.tfield{display:block; width:100%; padding:11px 13px; border:1px solid var(--line2);
+  border-radius:11px; background:var(--field); color:var(--ink); font-size:16px;
+  min-height:46px; text-align:left; font-variant-numeric:tabular-nums;}
+.tfield.ph{color:var(--faint);}
+.tfield.tsm{min-height:38px; padding:7px 6px; font-size:13.5px; width:92px; text-align:center;
+  border-radius:10px;}
+.row2{display:flex; gap:10px;}
+.row2 .field{flex:1;}
+.checkrow{display:flex; align-items:center; gap:11px; padding:10px 2px; font-size:15px; font-weight:500;}
+.checkrow input[type=checkbox]{width:21px; height:21px; flex-shrink:0; accent-color:var(--paid); margin:0;}
+.reveal{display:none; padding:2px 0 4px 32px;}
+.reveal.on{display:block;}
+.linkbtn{background:none; border:0; padding:2px 1px 0; font-size:13px; font-weight:600;
+  color:var(--paid); text-align:left;}
+.ptseg{display:flex; background:var(--sunken); border:1px solid var(--line);
+  border-radius:11px; padding:3px; gap:3px;}
+.ptseg button{flex:1; padding:9px 4px; border:0; background:transparent; border-radius:8px;
+  font-size:14px; font-weight:600; color:var(--mut);}
+.ptseg button.on{background:var(--surface); color:var(--ink); border:1px solid var(--line2);}
+
+/* pay stub */
+.stub{background:var(--sunken); border:1px solid var(--line); border-radius:15px;
+  padding:13px 14px; margin-bottom:12px;}
+.srow{display:flex; justify-content:space-between; gap:12px; font-size:13.5px;
+  padding:3px 0; font-variant-numeric:tabular-nums;}
+.srow .sl{color:var(--mut);}
+.srow .sv{font-weight:600;}
+.srow.note{font-size:12.5px;}
+.srow.note .sl,.srow.note .sv{color:var(--faint); font-weight:500;}
+.srow.total{border-top:1px solid var(--line2); margin-top:7px; padding-top:9px; font-size:16px;}
+.srow.total .sl{color:var(--ink); font-weight:700;}
+.srow.total .sv{font-size:21px; font-weight:800; font-stretch:114%; letter-spacing:-0.01em;}
+
+.btn{display:block; width:100%; padding:15px; border-radius:13px; border:1px solid transparent;
+  font-size:16px; font-weight:700; text-align:center; letter-spacing:-0.01em;}
+.btn-primary{background:var(--btn); color:var(--btn-ink);}
+.btn-ghost{background:var(--surface); border-color:var(--line2); color:var(--ink);}
+.btn-danger{background:transparent; color:var(--late); font-weight:600;}
+.btn + .btn{margin-top:9px;}
+
+/* data view */
+.dcard{background:var(--surface); border:1px solid var(--line); border-radius:15px;
+  padding:15px; margin-bottom:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.dcard h3{margin:0 0 6px; font-size:15px; font-weight:700;}
+.dcard p{margin:0 0 12px; font-size:13.5px; color:var(--mut);}
+.dcard p:last-child{margin-bottom:0;}
+.dcard ol{margin:0; padding-left:20px; font-size:13.5px; color:var(--mut);}
+.dcard li{margin-bottom:4px;}
+.dfoot{font-size:12.5px; color:var(--faint); text-align:center; margin-top:4px;}
+
+/* modals */
+body.lock{overflow:hidden;}
+.overlay{position:fixed; inset:0; z-index:30; background:rgba(0,0,0,.6);
+  display:none; align-items:flex-end; justify-content:center;}
+.overlay.on{display:flex;}
+.overlay.ztop{z-index:50;}
+.modal{background:#0A0A09; width:100%; max-width:560px; max-height:86vh; overflow-y:auto;
+  border:1px solid var(--line); border-bottom:0;
+  border-radius:20px 20px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));
+  -webkit-overflow-scrolling:touch; box-shadow:inset 0 1px 0 rgba(255,255,255,.05);}
+.mtop{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.mtop h3{margin:0; font-size:18px; font-weight:800; font-stretch:114%;}
+.xbtn{width:34px; height:34px; border-radius:50%; border:1px solid var(--line2);
+  background:var(--surface); color:var(--mut); font-size:14px;
+  display:flex; align-items:center; justify-content:center;}
+.mnote{font-size:13px; color:var(--mut); margin:0 0 12px;}
+.fgroup{margin-bottom:14px;}
+.chipwrap{display:flex; flex-wrap:wrap; gap:7px;}
+.tchip{font-size:13px; font-weight:600; padding:7px 12px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--line2); color:var(--ink);}
+.tchip.on{background:var(--btn); border-color:var(--btn); color:var(--btn-ink);}
+
+/* calendar */
+.calhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+.caltitle{font-size:15px; font-weight:700; font-stretch:110%;}
+.calnav{width:38px; height:38px; border-radius:11px; border:1px solid var(--line2);
+  background:var(--surface); color:var(--ink); font-size:19px; line-height:1;}
+.calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+.caldow{font-size:11px; font-weight:600; color:var(--faint); text-align:center; padding:3px 0;}
+.calday{aspect-ratio:1; min-height:38px; border-radius:10px; border:1px solid transparent;
+  background:var(--surface); font-size:14px; font-weight:500; color:var(--ink); padding:0;}
+.calday.today{border-color:var(--line2); font-weight:700;}
+.calday.sel{background:var(--btn); border-color:var(--btn); color:var(--btn-ink);}
+.duprow{display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:9px 0; border-top:1px solid var(--line); font-size:14px;}
+.duprow:first-child{border-top:0;}
+.duprow .dupd{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.duptimes{display:flex; gap:6px; flex-shrink:0;}
+.dnote{font-size:13px; color:var(--faint); margin:4px 0;}
+
+/* wheel picker */
+.wheelmodal{max-height:none; overflow:visible;}
+.wheelwrap{position:relative; margin:4px 0 14px;}
+.wheelcols{display:flex; justify-content:center; height:216px; overflow:hidden;
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent);
+  mask-image:linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent);}
+.wcol{height:216px; overflow-y:scroll; scroll-snap-type:y mandatory; text-align:center;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;}
+.wcol::-webkit-scrollbar{display:none;}
+.wpad{height:90px;}
+.witem{height:36px; line-height:36px; font-size:20px; font-weight:600; color:var(--faint);
+  scroll-snap-align:center; font-variant-numeric:tabular-nums;}
+.witem.cur{color:var(--ink);}
+.wheelband{position:absolute; left:6%; right:6%; top:90px; height:36px;
+  border-radius:11px; background:rgba(255,255,255,.07); pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);}
+
+/* tab bar */
+.tabs{position:fixed; left:0; right:0; bottom:0; z-index:9;
+  background:var(--chrome);
+  -webkit-backdrop-filter:saturate(1.4) blur(16px); backdrop-filter:saturate(1.4) blur(16px);
+  border-top:1px solid var(--line);
+  padding:7px 10px calc(7px + env(safe-area-inset-bottom,0px));}
+.tabs-in{max-width:560px; margin:0 auto; display:flex;}
+.tabs button{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:transparent; border:0; padding:5px 4px; color:var(--faint);
+  font-size:11px; font-weight:600;}
+.tabs button.on{color:var(--ink);}
+.tabs svg{width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.9;
+  stroke-linecap:round; stroke-linejoin:round;}
+
+/* toast */
+#toast{position:fixed; left:50%; transform:translateX(-50%) translateY(8px);
+  bottom:calc(84px + env(safe-area-inset-bottom,0px)); z-index:60;
+  background:var(--btn); color:var(--btn-ink); font-size:14px; font-weight:600;
+  padding:11px 17px; border-radius:999px; max-width:88vw; text-align:center;
+  opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease;}
+#toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+@media (prefers-reduced-motion: reduce){ #toast{transition:none;} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="logo">Shift Daddy</div>
+    <div class="glance"><div class="gk" id="g-owedk">Owed to you</div><div class="gv" id="g-owed">$0.00</div></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <section class="view on" id="view-home">
+    <div class="hero">
+      <div class="hk" id="s-owedk">Owed to you</div>
+      <div class="hv" id="s-owed">$0.00</div>
+      <div class="hs" id="s-owedn">No unpaid jobs</div>
+      <div class="hero-row">
+        <div class="hfig"><div class="fk">Paid out</div><div class="fv green" id="s-paid">$0.00</div><div class="fs">all time</div></div>
+        <div class="hfig"><div class="fk">This month</div><div class="fv" id="s-m">$0.00</div><div class="fs" id="s-mi">0 jobs, 0 h</div></div>
+      </div>
+    </div>
+
+    <div class="owedby hide" id="owedby">
+      <div class="k2">Who owes you</div>
+      <div class="chiprow" id="owedchips"></div>
+    </div>
+
+    <div class="fitstrip hide" id="fitstrip"></div>
+
+    <div class="listbar" id="listbar">
+      <div class="seg" id="filterSeg">
+        <button data-f="all" class="on">All</button>
+        <button data-f="unpaid">Unpaid</button>
+        <button data-f="paid">Paid</button>
+      </div>
+      <button class="fbtn" id="fbtn" aria-label="Filter jobs">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        <span class="dot"></span>
+      </button>
+    </div>
+    <div class="afrow hide" id="afrow"></div>
+
+    <div id="joblist"></div>
+  </section>
+
+  <!-- ADD / EDIT -->
+  <section class="view" id="view-add">
+    <h2 class="pagehead" id="formTitle">New job</h2>
+
+    <div class="fsheet">
+      <p class="ft">Basics</p>
+      <div class="field"><label for="f_title">Job title</label>
+        <input type="text" id="f_title" placeholder="Banquet server, brand ambassador…" autocomplete="off"></div>
+      <div class="field"><label for="f_company">Company or agency <span class="hint">(optional)</span></label>
+        <input type="text" id="f_company" placeholder="Who is paying you" autocomplete="off"></div>
+      <div class="field"><label for="f_date">Date</label><input type="date" id="f_date"></div>
+      <div class="row2">
+        <div class="field"><label>Call time</label>
+          <button type="button" class="tfield ph" id="f_start" data-v="">Set call time</button></div>
+        <div class="field"><label>Out time</label>
+          <button type="button" class="tfield ph" id="f_out" data-v="">Set out time</button></div>
+      </div>
+      <div class="field"><label for="f_loc">Location</label>
+        <input type="text" id="f_loc" placeholder="Venue or address" autocomplete="off"></div>
+    </div>
+
+    <div class="fsheet">
+      <p class="ft">Pay</p>
+      <div class="field">
+        <div class="ptseg" role="group" aria-label="Pay type">
+          <button type="button" id="pt-hourly" class="on">Hourly</button>
+          <button type="button" id="pt-flat">Flat rate</button>
+        </div>
+      </div>
+      <div id="hourlyWrap">
+        <div class="row2">
+          <div class="field"><label for="f_rate">Rate ($/hr)</label>
+            <input type="number" id="f_rate" inputmode="decimal" min="0" step="0.25" placeholder="0.00"></div>
+          <div class="field"><label for="f_hours">Hours worked</label>
+            <input type="number" id="f_hours" inputmode="decimal" min="0" step="0.25" placeholder="0"></div>
+        </div>
+        <button type="button" class="linkbtn hide" id="useSpan1"></button>
+        <label class="checkrow"><input type="checkbox" id="f_ot"> Overtime after 8 hours</label>
+        <div class="reveal" id="otOpts">
+          <div class="field"><label for="f_otm">Overtime multiplier</label>
+            <input type="number" id="f_otm" inputmode="decimal" min="1" step="0.25" value="1.5"></div>
+        </div>
+        <label class="checkrow"><input type="checkbox" id="f_lunch"> Unpaid lunch break <span class="hint">(deducted from hours)</span></label>
+        <div class="reveal" id="lunchOpts">
+          <div class="field"><label>Break length</label>
+            <button type="button" class="tfield" id="f_lmin" data-v="30">30 min</button></div>
+        </div>
+      </div>
+      <div id="flatWrap" class="hide">
+        <div class="row2">
+          <div class="field"><label for="f_flat">Flat amount ($)</label>
+            <input type="number" id="f_flat" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="field"><label for="f_hours2">Hours worked <span class="hint">(record only)</span></label>
+            <input type="number" id="f_hours2" inputmode="decimal" min="0" step="0.25" placeholder="0"></div>
+        </div>
+        <button type="button" class="linkbtn hide" id="useSpan2"></button>
+      </div>
+      <div class="field"><label for="f_park">Parking</label>
+        <select id="f_park">
+          <option value="none">Free, or covered by the company</option>
+          <option value="self">Paid out of pocket, no reimbursement</option>
+          <option value="reimburse">Reimbursable, company owes me</option>
+        </select></div>
+      <div class="reveal" id="parkOpts" style="padding-left:0;">
+        <div class="field"><label for="f_pamt" id="parkLabel">Amount</label>
+          <input type="number" id="f_pamt" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+    </div>
+
+    <div class="fsheet">
+      <p class="ft">Uniform</p>
+      <div class="row2">
+        <div class="field"><label for="f_pants">Pants</label>
+          <select id="f_pants">
+            <option value=""></option>
+            <option>Black slacks</option>
+            <option>Khakis</option>
+            <option>Black jeans</option>
+            <option>Dark denim</option>
+            <option>Company-provided</option>
+            <option>Other, see notes</option>
+          </select></div>
+        <div class="field"><label for="f_shirt">Shirt</label>
+          <select id="f_shirt">
+            <option value=""></option>
+            <option>White button-down</option>
+            <option>Black button-down</option>
+            <option>Black polo</option>
+            <option>White polo</option>
+            <option>Company-provided</option>
+            <option>Other, see notes</option>
+          </select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="f_tie">Tie</label>
+          <select id="f_tie">
+            <option value=""></option>
+            <option>None</option>
+            <option>Black tie</option>
+            <option>Black bow tie</option>
+            <option>Company-provided</option>
+            <option>Other, see notes</option>
+          </select></div>
+        <div class="field"><label for="f_shoes">Shoes</label>
+          <select id="f_shoes">
+            <option value=""></option>
+            <option>Black dress shoes</option>
+            <option>Black non-slip</option>
+            <option>All-black sneakers</option>
+            <option>Company-provided</option>
+            <option>Other, see notes</option>
+          </select></div>
+      </div>
+      <label class="checkrow"><input type="checkbox" id="f_fit"> Fitting needed</label>
+      <div class="reveal" id="fitOpts">
+        <div class="field"><label for="f_fdate">Fitting date</label><input type="date" id="f_fdate"></div>
+        <div class="field"><label>Fitting time</label>
+          <button type="button" class="tfield ph" id="f_ftime" data-v="">Set fitting time</button></div>
+        <div class="field"><label for="f_finfo">Fitting details</label>
+          <input type="text" id="f_finfo" placeholder="Where, what to bring…" autocomplete="off"></div>
+        <label class="checkrow"><input type="checkbox" id="f_fitpaid"> Fitting is paid</label>
+        <div class="reveal" id="fitPayOpts">
+          <div class="field"><label for="f_fpamt">Fitting pay owed ($)</label>
+            <input type="number" id="f_fpamt" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fsheet">
+      <p class="ft">Notes &amp; status</p>
+      <div class="field"><label for="f_notes">Notes <span class="hint">(optional)</span></label>
+        <textarea id="f_notes" placeholder="Contact, check-in desk, who to invoice…"></textarea></div>
+      <label class="checkrow"><input type="checkbox" id="f_paid"> Already paid</label>
+      <div class="reveal" id="paidOpts">
+        <div class="row2">
+          <div class="field"><label for="f_pdate">Date paid <span class="hint">(optional)</span></label>
+            <input type="date" id="f_pdate"></div>
+          <div class="field"><label for="f_recv">Amount received <span class="hint">(optional)</span></label>
+            <input type="number" id="f_recv" inputmode="decimal" min="0" step="0.01" placeholder="Defaults to total"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stub">
+      <p class="ft">Pay summary</p>
+      <div id="paybox"></div>
+    </div>
+
+    <button class="btn btn-primary" id="saveBtn">Save job</button>
+    <button class="btn btn-ghost hide" id="dupBtn">Duplicate to more dates</button>
+    <button class="btn btn-danger hide" id="delBtn">Delete job</button>
+  </section>
+
+  <!-- BACKUP -->
+  <section class="view" id="view-data">
+    <h2 class="pagehead">Backup &amp; data</h2>
+
+    <div class="dcard">
+      <h3>Where your data lives</h3>
+      <p>Everything you enter is stored on this phone, in this app or browser only. Nothing is sent anywhere. That also means clearing Safari website data, or deleting the home-screen app, erases it, so copy a backup now and then.</p>
+      <button class="btn btn-ghost" id="copyJsonBtn">Copy backup (JSON)</button>
+      <button class="btn btn-ghost" id="copyCsvBtn">Copy as CSV for spreadsheets</button>
+    </div>
+
+    <div class="dcard">
+      <h3>Restore a backup</h3>
+      <p>Paste a backup you copied earlier, then restore. This replaces what is currently on this device.</p>
+      <div class="field"><textarea id="restoreBox" placeholder="Paste backup here"></textarea></div>
+      <button class="btn btn-ghost" id="restoreBtn">Restore backup</button>
+    </div>
+
+    <div class="dcard">
+      <h3>Put it on your home screen</h3>
+      <ol>
+        <li>Open this page in Safari on your iPhone.</li>
+        <li>Tap the Share button, then “Add to Home Screen.”</li>
+        <li>Open it from the icon and enter your jobs there. The home-screen app keeps its own storage, separate from the Safari tab, so add it first, then start logging.</li>
+        <li>On Android, open the link in Chrome instead and choose “Install app” or “Add to Home screen.”</li>
+      </ol>
+      <p style="margin-top:10px;">After the first open, the whole app is saved on the phone and launches with no connection at all.</p>
+    </div>
+
+    <p class="dfoot" id="dcount"></p>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <div class="tabs-in">
+    <button id="tab-home" class="on" aria-label="Overview">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h9"/></svg>
+      Overview</button>
+    <button id="tab-add" aria-label="Add job">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+      Add job</button>
+    <button id="tab-data" aria-label="Backup">
+      <svg viewBox="0 0 24 24"><path d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5"/><path d="M4.5 16.5v1.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-1.5"/></svg>
+      Backup</button>
+  </div>
+</nav>
+
+<!-- FILTER MODAL -->
+<div class="overlay" id="filterModal">
+  <div class="modal">
+    <div class="mtop"><h3>Filter jobs</h3><button class="xbtn" data-close="filterModal" aria-label="Close">✕</button></div>
+    <p class="mnote">Pick as many as you need. Filters stack, and the totals up top follow whatever is selected.</p>
+    <div class="field"><label for="ft_q">Search</label>
+      <input type="text" id="ft_q" placeholder="Title, company, location, notes" autocomplete="off"></div>
+    <div class="fgroup hide" id="ft_cosWrap"><p class="ft">Companies</p><div class="chipwrap" id="ft_cos"></div></div>
+    <div class="fgroup hide" id="ft_titlesWrap"><p class="ft">Job titles</p><div class="chipwrap" id="ft_titles"></div></div>
+    <p class="ft">Date range</p>
+    <div class="row2">
+      <div class="field"><label for="ft_from">From</label><input type="date" id="ft_from"></div>
+      <div class="field"><label for="ft_to">To</label><input type="date" id="ft_to"></div>
+    </div>
+    <button class="btn btn-primary" id="ftApply">Apply filters</button>
+    <button class="btn btn-ghost" id="ftClear">Clear filters</button>
+  </div>
+</div>
+
+<!-- DUPLICATE MODAL -->
+<div class="overlay" id="dupModal">
+  <div class="modal">
+    <div class="mtop"><h3>Duplicate to dates</h3><button class="xbtn" data-close="dupModal" aria-label="Close">✕</button></div>
+    <p class="mnote">Tap every date this gig repeats on. Each copy keeps the details on screen and starts unpaid.</p>
+    <div class="calhead">
+      <button class="calnav" id="calPrev" aria-label="Previous month">‹</button>
+      <div class="caltitle" id="calTitle"></div>
+      <button class="calnav" id="calNext" aria-label="Next month">›</button>
+    </div>
+    <div class="calgrid" id="calGrid"></div>
+    <p class="ft" style="margin-top:14px;">Call and out times for each day</p>
+    <div id="dupList"></div>
+    <div class="field" style="margin-top:12px;"><label for="dup_hours">Hours worked for these days <span class="hint">(blank uses each day’s times)</span></label>
+      <input type="number" id="dup_hours" inputmode="decimal" min="0" step="0.25" placeholder="0"></div>
+    <label class="checkrow"><input type="checkbox" id="dup_copyfit"> Copy the fitting details too</label>
+    <button class="btn btn-primary" id="dupGo">Create jobs</button>
+  </div>
+</div>
+
+<!-- TIME WHEEL -->
+<div class="overlay ztop" id="wheelModal">
+  <div class="modal wheelmodal">
+    <div class="mtop"><h3 id="whTitle">Time</h3><button class="xbtn" data-close="wheelModal" aria-label="Close">✕</button></div>
+    <div class="wheelwrap">
+      <div class="wheelcols" id="wheelCols"></div>
+      <div class="wheelband"></div>
+    </div>
+    <button class="btn btn-primary" id="whDone">Done</button>
+    <button class="btn btn-ghost hide" id="whClear">Clear</button>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:20px;">Shift Daddy needs JavaScript turned on to run.</p></noscript>
+
+<script>
+(function(){
+"use strict";
+
+var KEY = "shift-ledger-v1";
+var LATE_DAYS = 30;
+var ITEM = 36;
+var state = { jobs: [] };
+var filterMode = "all";
+var editingId = null;
+var curPT = "hourly";
+var filterState = { q:"", companies:[], titles:[], from:"", to:"" };
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var p = JSON.parse(raw);
+      if(p && Array.isArray(p.jobs)) state = { jobs: p.jobs };
+    }
+  }catch(e){}
+}
+function persist(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(state));
+    return true;
+  }catch(e){
+    toast("Couldn’t save. Storage is unavailable in this browser.");
+    return false;
+  }
+}
+
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+var moneyFmt = new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" });
+function fm(n){ return moneyFmt.format(isFinite(n) ? n : 0); }
+function fmShort(n){ return fm(n).replace(/\.00$/, ""); }
+function num(v){ var n = parseFloat(v); return isFinite(n) && n > 0 ? n : 0; }
+function trimN(n){ return String(Math.round(n * 100) / 100); }
+function pad2(n){ return (n < 10 ? "0" : "") + n; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+}
+function parseD(s){
+  if(!s) return null;
+  var p = s.split("-");
+  if(p.length < 3) return null;
+  return new Date(+p[0], +p[1]-1, +p[2]);
+}
+var DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var MONF = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function fdate(s){
+  var d = parseD(s);
+  if(!d) return "";
+  return DOW[d.getDay()] + ", " + MON[d.getMonth()] + " " + d.getDate();
+}
+function fdateShort(s){
+  var d = parseD(s);
+  if(!d) return "";
+  return MON[d.getMonth()] + " " + d.getDate();
+}
+function ftime(t){
+  if(!t) return "";
+  var p = t.split(":");
+  var h = +p[0], m = p[1] || "00";
+  var ap = h >= 12 ? "PM" : "AM";
+  h = h % 12; if(h === 0) h = 12;
+  return h + ":" + m + " " + ap;
+}
+function toMin(t){
+  var p = (t || "").split(":");
+  if(p.length < 2) return null;
+  return (+p[0]) * 60 + (+p[1]);
+}
+function spanHrs(a, b){
+  var ma = toMin(a), mb = toMin(b);
+  if(ma == null || mb == null) return 0;
+  var d = mb - ma;
+  if(d <= 0) d += 1440;
+  return Math.round((d / 60) * 4) / 4;
+}
+function addHrs(t, h){
+  var m = toMin(t);
+  if(m == null) return "";
+  m = (m + Math.round(h * 60)) % 1440;
+  return pad2(Math.floor(m / 60)) + ":" + pad2(m % 60);
+}
+function ageDays(s){
+  var d = parseD(s);
+  if(!d) return 0;
+  var t = new Date();
+  t = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  return Math.max(0, Math.round((t - d) / 86400000));
+}
+function uid(){
+  try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  return "j" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function monthLabel(k){
+  var p = k.split("-");
+  var mi = (+p[1]) - 1;
+  if(mi >= 0 && mi < 12) return MONF[mi] + " " + p[0];
+  return "Undated";
+}
+
+/* ---- time field buttons ---- */
+function tGet(id){ return $(id).getAttribute("data-v") || ""; }
+function tSetTime(id, v){
+  var b = $(id);
+  b.setAttribute("data-v", v || "");
+  if(v){ b.textContent = ftime(v); b.classList.remove("ph"); }
+  else{
+    var ph = id === "f_start" ? "Set call time" : id === "f_out" ? "Set out time" : "Set fitting time";
+    b.textContent = ph; b.classList.add("ph");
+  }
+}
+function tSetMin(id, v){
+  var b = $(id);
+  v = String(v == null || v === "" ? "30" : v);
+  b.setAttribute("data-v", v);
+  b.textContent = v + " min";
+}
+
+/* ---- pay math ---- */
+function calc(j){
+  var r = { payable:0, baseH:0, base:0, otH:0, otPay:0, wage:0, reimb:0, fitPay:0, oop:0, total:0 };
+  if(j.payType === "flat"){
+    r.wage = num(j.flat);
+  }else{
+    var hours = num(j.hours), rate = num(j.rate);
+    var ded = j.lunch ? num(j.lunchMin) / 60 : 0;
+    var pay = Math.max(0, hours - ded);
+    r.payable = pay;
+    if(j.ot && pay > 8){
+      r.baseH = 8; r.base = 8 * rate;
+      r.otH = pay - 8;
+      r.otPay = r.otH * rate * (num(j.otMult) || 1.5);
+    }else{
+      r.baseH = pay; r.base = pay * rate;
+    }
+    r.wage = r.base + r.otPay;
+  }
+  if(j.parking === "reimburse") r.reimb = num(j.parkingAmt);
+  if(j.parking === "self") r.oop = num(j.parkingAmt);
+  if(j.fitting && j.fitPaid) r.fitPay = num(j.fitPayAmt);
+  r.total = r.wage + r.reimb + r.fitPay;
+  return r;
+}
+function amtPaid(j){
+  if(!j.paid) return 0;
+  var raw = j.paidAmount == null ? "" : String(j.paidAmount).trim();
+  if(raw !== ""){
+    var p = parseFloat(raw);
+    if(isFinite(p) && p >= 0) return p;
+  }
+  return calc(j).total;
+}
+
+/* ---- filters ---- */
+function filtersActive(){
+  return !!(filterState.q || filterState.companies.length || filterState.titles.length || filterState.from || filterState.to);
+}
+function inListCI(list, v){
+  v = (v || "").trim().toLowerCase();
+  for(var i = 0; i < list.length; i++){
+    if(list[i].trim().toLowerCase() === v) return true;
+  }
+  return false;
+}
+function matchesFilter(j){
+  if(filterState.q){
+    var q = filterState.q.toLowerCase();
+    var hay = [j.title, j.company, j.location, j.notes].join(" ").toLowerCase();
+    if(hay.indexOf(q) === -1) return false;
+  }
+  if(filterState.companies.length && !inListCI(filterState.companies, j.company)) return false;
+  if(filterState.titles.length && !inListCI(filterState.titles, j.title)) return false;
+  if(filterState.from && !((j.date || "") >= filterState.from)) return false;
+  if(filterState.to && !((j.date || "") !== "" && j.date <= filterState.to)) return false;
+  return true;
+}
+
+/* ---- views ---- */
+var VIEWS = ["home","add","data"];
+function show(v){
+  VIEWS.forEach(function(x){
+    $("view-" + x).classList.toggle("on", x === v);
+    $("tab-" + x).classList.toggle("on", x === v);
+  });
+  window.scrollTo(0, 0);
+}
+
+/* ---- overview ---- */
+function render(){
+  var all = state.jobs;
+  var base = all.filter(matchesFilter);
+  var fActive = filtersActive();
+
+  var unpaid = 0, unpaidN = 0, paid = 0;
+  var nowK = todayStr().slice(0, 7);
+  var mEarn = 0, mHours = 0, mN = 0;
+  var perMonth = {};
+
+  base.forEach(function(j){
+    var c = calc(j);
+    var earned = j.paid ? amtPaid(j) : c.total;
+    var k = (j.date || "0000-00").slice(0, 7);
+    if(!perMonth[k]) perMonth[k] = { tot:0, owed:0 };
+    perMonth[k].tot += earned;
+    if(j.paid){ paid += amtPaid(j); } else { unpaid += c.total; unpaidN++; perMonth[k].owed += c.total; }
+    if(k === nowK){
+      mEarn += earned;
+      mHours += (j.payType === "flat" ? num(j.hours) : (c.payable || num(j.hours)));
+      mN++;
+    }
+  });
+
+  $("s-owedk").textContent = fActive ? "Owed to you (filtered)" : "Owed to you";
+  $("g-owedk").textContent = fActive ? "Owed (filtered)" : "Owed to you";
+  $("s-owed").textContent = fm(unpaid);
+  $("s-owed").classList.toggle("zero", unpaid === 0);
+  $("g-owed").textContent = fm(unpaid);
+  $("g-owed").classList.toggle("zero", unpaid === 0);
+  var owedSent = unpaidN === 0 ? "No unpaid jobs" :
+    (unpaidN === 1 ? "1 job waiting on payment" : unpaidN + " jobs waiting on payment");
+  if(fActive) owedSent += ", showing " + base.length + " of " + all.length + " jobs";
+  $("s-owedn").textContent = owedSent;
+  $("s-paid").textContent = fm(paid);
+  $("s-m").textContent = fm(mEarn);
+  $("s-mi").textContent = mN + (mN === 1 ? " job, " : " jobs, ") + trimN(mHours) + " h";
+
+  /* who owes you */
+  var byCo = {};
+  base.forEach(function(j){
+    if(!j.paid && j.company && j.company.trim()){
+      var k = j.company.trim();
+      byCo[k] = (byCo[k] || 0) + calc(j).total;
+    }
+  });
+  var coKeys = Object.keys(byCo).sort(function(a, b){ return byCo[b] - byCo[a]; });
+  if(coKeys.length){
+    $("owedby").classList.remove("hide");
+    $("owedchips").innerHTML = coKeys.map(function(k){
+      return '<span class="cochip">' + esc(k) + " " + fmShort(byCo[k]) + "</span>";
+    }).join("");
+  }else{
+    $("owedby").classList.add("hide");
+  }
+
+  /* upcoming fittings */
+  var td = todayStr();
+  var fits = base.filter(function(j){ return j.fitting && j.fitDate && j.fitDate >= td; })
+    .sort(function(a, b){ return a.fitDate < b.fitDate ? -1 : 1; })
+    .slice(0, 3);
+  if(fits.length){
+    $("fitstrip").classList.remove("hide");
+    $("fitstrip").innerHTML = fits.map(function(j){
+      var when = fdateShort(j.fitDate) + (j.fitTime ? ", " + ftime(j.fitTime) : "");
+      return '<button class="fitcard" data-act="open" data-id="' + j.id + '">' +
+        '<span class="ftag">Fitting</span><span class="fwhen">' + esc(when) + "</span>" +
+        '<span class="fwho">' + esc(j.title || "Untitled job") + "</span></button>";
+    }).join("");
+  }else{
+    $("fitstrip").classList.add("hide");
+  }
+
+  renderActive();
+  $("fbtn").classList.toggle("active", fActive);
+
+  /* list */
+  if(all.length === 0){
+    $("listbar").classList.add("hide");
+    $("joblist").innerHTML =
+      '<div class="empty"><h2>No jobs yet</h2>' +
+      "<p>Log each gig as you book it or right after the shift, check it off when the money lands, and this screen keeps the running tally of who still owes you.</p>" +
+      '<button class="btn btn-primary" data-act="new" style="max-width:260px;">Add your first job</button>' +
+      '<p style="margin-top:18px;">Tip: in Safari, tap Share, then “Add to Home Screen” to keep it as an app. The Backup tab has the full steps.</p></div>';
+    return;
+  }
+  $("listbar").classList.remove("hide");
+
+  if(base.length === 0){
+    $("joblist").innerHTML = '<div class="empty"><p style="margin-top:14px;">Nothing matches these filters.</p>' +
+      '<button class="btn btn-ghost" data-act="clearf" style="max-width:220px;">Clear filters</button></div>';
+    return;
+  }
+
+  var shown = base.filter(function(j){
+    if(filterMode === "unpaid") return !j.paid;
+    if(filterMode === "paid") return !!j.paid;
+    return true;
+  }).slice().sort(function(a, b){
+    var d = (b.date || "").localeCompare(a.date || "");
+    if(d !== 0) return d;
+    return (b.created || 0) - (a.created || 0);
+  });
+
+  if(shown.length === 0){
+    $("joblist").innerHTML = '<div class="empty"><p style="margin-top:14px;">Nothing ' +
+      (filterMode === "paid" ? "paid" : "unpaid") + " in this view yet.</p></div>";
+    return;
+  }
+
+  var groups = {}, order = [];
+  shown.forEach(function(j){
+    var k = (j.date || "0000-00").slice(0, 7);
+    if(!groups[k]){ groups[k] = []; order.push(k); }
+    groups[k].push(j);
+  });
+  order.sort().reverse();
+
+  var html = "";
+  order.forEach(function(k){
+    var pm = perMonth[k] || { tot:0, owed:0 };
+    var right = pm.owed > 0
+      ? fmShort(pm.tot) + " total, <b>" + fmShort(pm.owed) + " owed</b>"
+      : fmShort(pm.tot) + ' total, <span class="ok">all paid</span>';
+    html += '<div class="mh"><h3>' + esc(monthLabel(k)) + '</h3><div class="mt">' + right + "</div></div>";
+    html += '<div class="sheet">' + groups[k].map(jobRow).join("") + "</div>";
+  });
+  $("joblist").innerHTML = html;
+}
+
+function jobRow(j){
+  var c = calc(j);
+  var sub = [];
+  if(j.date) sub.push(esc(fdate(j.date)));
+  var outBtn = '<button type="button" class="tadj" data-act="setout" data-id="' + j.id +
+    '" aria-label="Change out time">' + esc(ftime(j.out)) + "</button>";
+  if(j.start && j.out) sub.push(esc(ftime(j.start)) + " to " + outBtn);
+  else if(j.start) sub.push(esc(ftime(j.start)));
+  else if(j.out) sub.push("out " + outBtn);
+  if(j.payType === "flat"){
+    sub.push("flat rate");
+    if(num(j.hours)) sub.push(esc(trimN(num(j.hours)) + " h"));
+  }else if(num(j.hours)){
+    sub.push(esc(trimN(num(j.hours)) + " h at " + fmShort(num(j.rate)) + "/h"));
+  }
+  var sub2 = [];
+  if(j.company && j.company.trim()) sub2.push(j.company.trim());
+  if(j.location && j.location.trim()) sub2.push(j.location.trim());
+
+  var chips = "";
+  if(!j.out)
+    chips += '<button type="button" class="chipbtn" data-act="setout" data-id="' + j.id + '">Out time?</button>';
+  if(j.parking === "reimburse" && num(j.parkingAmt))
+    chips += '<span class="chip amber">+' + fmShort(num(j.parkingAmt)) + " parking</span>";
+  if(j.parking === "self" && num(j.parkingAmt))
+    chips += '<span class="chip">' + fmShort(num(j.parkingAmt)) + " parking, own cost</span>";
+  if(j.fitting && j.fitPaid && num(j.fitPayAmt))
+    chips += '<span class="chip amber">+' + fmShort(num(j.fitPayAmt)) + " fitting</span>";
+  if(j.fitting && j.fitDate && j.fitDate >= todayStr())
+    chips += '<span class="chip">Fitting ' + esc(fdateShort(j.fitDate)) + "</span>";
+
+  var pill;
+  if(j.paid){
+    pill = '<span class="pill p-paid">Paid</span>';
+  }else{
+    var age = j.date ? ageDays(j.date) : 0;
+    var late = age >= LATE_DAYS;
+    var label = (late ? "Late" : "Unpaid") + (j.date ? " (" + age + "d)" : "");
+    pill = '<span class="pill ' + (late ? "p-late" : "p-unpaid") + '">' + label + "</span>";
+  }
+
+  var ck = '<button class="ck' + (j.paid ? " on" : "") + '" data-act="check" data-id="' + j.id +
+    '" aria-pressed="' + (j.paid ? "true" : "false") + '" aria-label="' +
+    (j.paid ? "Mark unpaid" : "Mark paid") + '">' +
+    '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>';
+
+  return '<div class="job" data-act="open" data-id="' + j.id + '" role="button" tabindex="0">' + ck +
+    '<div class="jl"><div class="jt">' + esc(j.title || "Untitled job") + "</div>" +
+    (sub.length ? '<div class="js">' + sub.join(", ") + "</div>" : "") +
+    (sub2.length ? '<div class="js2">' + esc(sub2.join(", ")) + "</div>" : "") +
+    (chips ? '<div class="jc">' + chips + "</div>" : "") +
+    '</div><div class="jr"><div class="jv">' + fm(c.total) + "</div>" + pill + "</div></div>";
+}
+
+function togglePaid(id){
+  var j = state.jobs.find(function(x){ return x.id === id; });
+  if(!j) return;
+  if(!j.paid){
+    var t = calc(j).total;
+    j.paid = true;
+    j.paidDate = todayStr();
+    j.paidAmount = String(Math.round(t * 100) / 100);
+    if(persist()){ toast("Logged " + fm(t) + " as paid"); render(); }
+  }else{
+    j.paid = false;
+    j.paidDate = "";
+    j.paidAmount = "";
+    if(persist()){ toast("Marked unpaid"); render(); }
+  }
+}
+
+function quickOut(id){
+  var j = state.jobs.find(function(x){ return x.id === id; });
+  if(!j) return;
+  var oldOut = j.out || "";
+  openWheel({
+    title: "Out time",
+    type: "time",
+    value: oldOut,
+    fallback: j.start ? addHrs(j.start, 6) : "23:00",
+    allowClear: false,
+    onDone: function(v){
+      j.out = v;
+      var msg = "Out time saved";
+      if(j.start){
+        var s = spanHrs(j.start, v);
+        var hRaw = String(j.hours == null ? "" : j.hours).trim();
+        var oldSpan = oldOut ? spanHrs(j.start, oldOut) : 0;
+        if(s > 0 && (hRaw === "" || parseFloat(hRaw) === oldSpan)){
+          j.hours = String(s);
+          msg = "Out time saved, " + trimN(s) + " h";
+        }
+      }
+      if(persist()){ toast(msg); render(); }
+    }
+  });
+}
+
+/* ---- active filter chips ---- */
+function renderActive(){
+  var row = $("afrow");
+  var chips = [];
+  if(filterState.q) chips.push(["q", "", "“" + filterState.q + "”"]);
+  filterState.companies.forEach(function(c){ chips.push(["c", c, c]); });
+  filterState.titles.forEach(function(t){ chips.push(["t", t, t]); });
+  if(filterState.from || filterState.to){
+    var lbl = filterState.from && filterState.to
+      ? fdateShort(filterState.from) + " to " + fdateShort(filterState.to)
+      : (filterState.from ? "From " + fdateShort(filterState.from) : "Until " + fdateShort(filterState.to));
+    chips.push(["d", "", lbl]);
+  }
+  if(!chips.length){ row.classList.add("hide"); row.innerHTML = ""; return; }
+  row.classList.remove("hide");
+  row.innerHTML = chips.map(function(c){
+    return '<button type="button" class="afchip" data-rk="' + c[0] + '" data-rv="' + esc(c[1]) + '">' + esc(c[2]) + " ✕</button>";
+  }).join("") + '<button type="button" class="afchip clearall" data-rk="all">Clear</button>';
+}
+function removeFilter(k, v){
+  if(k === "all"){ filterState = { q:"", companies:[], titles:[], from:"", to:"" }; }
+  else if(k === "q"){ filterState.q = ""; }
+  else if(k === "d"){ filterState.from = ""; filterState.to = ""; }
+  else if(k === "c"){ filterState.companies = filterState.companies.filter(function(x){ return x !== v; }); }
+  else if(k === "t"){ filterState.titles = filterState.titles.filter(function(x){ return x !== v; }); }
+  render();
+}
+
+/* ---- filter modal ---- */
+var tmpF = null;
+function distinct(field){
+  var seen = {}, out = [];
+  state.jobs.forEach(function(j){
+    var v = (j[field] || "").trim();
+    if(v && !seen[v.toLowerCase()]){ seen[v.toLowerCase()] = 1; out.push(v); }
+  });
+  return out.sort(function(a, b){ return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+}
+function buildFChips(){
+  var cos = distinct("company"), tis = distinct("title");
+  $("ft_cosWrap").classList.toggle("hide", cos.length === 0);
+  $("ft_titlesWrap").classList.toggle("hide", tis.length === 0);
+  function chipsHtml(arr, sel, key){
+    return arr.map(function(v){
+      var on = inListCI(sel, v);
+      return '<button type="button" class="tchip' + (on ? " on" : "") + '" data-fk="' + key +
+        '" data-fv="' + esc(v) + '">' + esc(v) + "</button>";
+    }).join("");
+  }
+  $("ft_cos").innerHTML = chipsHtml(cos, tmpF.companies, "c");
+  $("ft_titles").innerHTML = chipsHtml(tis, tmpF.titles, "t");
+}
+function openFilter(){
+  tmpF = {
+    q: filterState.q,
+    companies: filterState.companies.slice(),
+    titles: filterState.titles.slice(),
+    from: filterState.from,
+    to: filterState.to
+  };
+  $("ft_q").value = tmpF.q;
+  $("ft_from").value = tmpF.from;
+  $("ft_to").value = tmpF.to;
+  buildFChips();
+  openModal("filterModal");
+}
+function applyFilter(){
+  tmpF.q = $("ft_q").value.trim();
+  tmpF.from = $("ft_from").value;
+  tmpF.to = $("ft_to").value;
+  if(tmpF.from && tmpF.to && tmpF.from > tmpF.to){
+    var sw = tmpF.from; tmpF.from = tmpF.to; tmpF.to = sw;
+  }
+  filterState = tmpF;
+  closeModal("filterModal");
+  render();
+}
+function clearFilterAll(){
+  filterState = { q:"", companies:[], titles:[], from:"", to:"" };
+  closeModal("filterModal");
+  render();
+}
+
+/* ---- duplicate modal ---- */
+var dupSel = {}, dupTimes = {}, dupBaseStart = "", dupBaseOut = "";
+var calMonth = null;
+function openDup(){
+  dupSel = {}; dupTimes = {};
+  dupBaseStart = tGet("f_start");
+  dupBaseOut = tGet("f_out");
+  var t = new Date();
+  calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+  $("dup_hours").value = (curPT === "flat" ? $("f_hours2").value : $("f_hours").value);
+  $("dup_copyfit").checked = false;
+  renderCal();
+  renderDupSel();
+  openModal("dupModal");
+}
+function renderCal(){
+  var y = calMonth.getFullYear(), m = calMonth.getMonth();
+  $("calTitle").textContent = MONF[m] + " " + y;
+  var first = new Date(y, m, 1).getDay();
+  var days = new Date(y, m + 1, 0).getDate();
+  var td = todayStr();
+  var html = DOW.map(function(d){ return '<div class="caldow">' + d.charAt(0) + "</div>"; }).join("");
+  for(var i = 0; i < first; i++) html += "<div></div>";
+  for(var d = 1; d <= days; d++){
+    var ds = y + "-" + pad2(m + 1) + "-" + pad2(d);
+    var cls = "calday" + (ds === td ? " today" : "") + (dupSel[ds] ? " sel" : "");
+    html += '<button type="button" class="' + cls + '" data-cald="' + ds + '">' + d + "</button>";
+  }
+  $("calGrid").innerHTML = html;
+}
+function tbtnHtml(d, k, v, label){
+  return '<button type="button" class="tfield tsm' + (v ? "" : " ph") + '" data-dt="' + d +
+    '" data-k="' + k + '">' + (v ? esc(ftime(v)) : label) + "</button>";
+}
+function renderDupSel(){
+  var keys = Object.keys(dupSel).sort();
+  var n = keys.length;
+  $("dupGo").textContent = n ? ("Create " + n + (n === 1 ? " job" : " jobs")) : "Create jobs";
+  if(!n){
+    $("dupList").innerHTML = '<p class="dnote">Tap dates on the calendar to pick the days.</p>';
+    return;
+  }
+  $("dupList").innerHTML = keys.map(function(d){
+    var t = dupTimes[d] || { start:"", out:"" };
+    return '<div class="duprow"><span class="dupd">' + esc(fdate(d)) + '</span>' +
+      '<div class="duptimes">' + tbtnHtml(d, "start", t.start, "Call") + tbtnHtml(d, "out", t.out, "Out") + "</div></div>";
+  }).join("");
+}
+function dupCreate(){
+  var keys = Object.keys(dupSel).sort();
+  if(!keys.length){ toast("Pick at least one date on the calendar."); return; }
+  var base = readForm();
+  var h = $("dup_hours").value;
+  var cf = $("dup_copyfit").checked;
+  var now = Date.now();
+  keys.forEach(function(d, i){
+    var j = {};
+    for(var k in base){ if(Object.prototype.hasOwnProperty.call(base, k)) j[k] = base[k]; }
+    var t = dupTimes[d] || { start:"", out:"" };
+    j.date = d;
+    j.start = t.start || "";
+    j.out = t.out || "";
+    j.hours = h !== "" ? h : (j.start && j.out ? String(spanHrs(j.start, j.out)) : "");
+    j.paid = false; j.paidDate = ""; j.paidAmount = "";
+    if(!cf){
+      j.fitting = false; j.fitDate = ""; j.fitTime = ""; j.fitInfo = "";
+      j.fitPaid = false; j.fitPayAmt = "";
+    }
+    j.id = uid();
+    j.created = now + i;
+    state.jobs.push(j);
+  });
+  if(persist()){
+    closeModal("dupModal");
+    toast("Created " + keys.length + (keys.length === 1 ? " job" : " jobs"));
+    render();
+    show("home");
+    resetForm();
+  }
+}
+
+/* ---- modal helpers ---- */
+var lockN = 0;
+function openModal(id){
+  $(id).classList.add("on");
+  lockN++;
+  document.body.classList.add("lock");
+}
+function closeModal(id){
+  $(id).classList.remove("on");
+  lockN = Math.max(0, lockN - 1);
+  if(lockN === 0) document.body.classList.remove("lock");
+}
+
+/* ---- wheel picker ---- */
+var wh = null;
+function wheelColHtml(labels, width){
+  var inner = '<div class="wpad"></div>';
+  for(var i = 0; i < labels.length; i++){
+    inner += '<div class="witem" data-i="' + i + '">' + labels[i] + "</div>";
+  }
+  inner += '<div class="wpad"></div>';
+  return '<div class="wcol" style="width:' + width + 'px">' + inner + "</div>";
+}
+function markCur(col){
+  var items = col.querySelectorAll(".witem");
+  if(!items.length) return;
+  var idx = Math.round(col.scrollTop / ITEM);
+  if(idx < 0) idx = 0;
+  if(idx > items.length - 1) idx = items.length - 1;
+  for(var i = 0; i < items.length; i++) items[i].classList.toggle("cur", i === idx);
+}
+function colIndex(col, max){
+  var idx = Math.round(col.scrollTop / ITEM);
+  if(idx < 0) idx = 0;
+  if(idx > max) idx = max;
+  return idx;
+}
+function openWheel(cfg){
+  wh = cfg;
+  $("whTitle").textContent = cfg.title;
+  $("whClear").classList.toggle("hide", !cfg.allowClear);
+  var wrap = $("wheelCols");
+  var startIdx;
+  if(cfg.type === "minutes"){
+    wh.vals = [];
+    for(var v = 0; v <= 120; v += 5) wh.vals.push(v);
+    var init = parseInt(cfg.value, 10);
+    if(!isFinite(init)) init = 30;
+    var best = 0;
+    for(var i = 0; i < wh.vals.length; i++){
+      if(Math.abs(wh.vals[i] - init) < Math.abs(wh.vals[best] - init)) best = i;
+    }
+    startIdx = [best];
+    wrap.innerHTML = wheelColHtml(wh.vals.map(function(x){ return x + " min"; }), 150);
+  }else{
+    var val = cfg.value || cfg.fallback || "17:00";
+    var mins = toMin(val);
+    if(mins == null) mins = 17 * 60;
+    var h24 = Math.floor(mins / 60), mm = mins % 60;
+    var h12 = h24 % 12; if(h12 === 0) h12 = 12;
+    var pm = h24 >= 12 ? 1 : 0;
+    var hL = [], mL = [];
+    for(var hh = 1; hh <= 12; hh++) hL.push(String(hh));
+    for(var mi = 0; mi < 60; mi++) mL.push(pad2(mi));
+    startIdx = [h12 - 1, mm, pm];
+    wrap.innerHTML = wheelColHtml(hL, 72) + wheelColHtml(mL, 72) + wheelColHtml(["AM","PM"], 72);
+  }
+  var cols = wrap.querySelectorAll(".wcol");
+  cols.forEach(function(c){
+    c.addEventListener("scroll", function(){ requestAnimationFrame(function(){ markCur(c); }); }, { passive:true });
+    c.addEventListener("click", function(e){
+      var it = e.target.closest(".witem");
+      if(!it) return;
+      c.scrollTo({ top: (+it.getAttribute("data-i")) * ITEM, behavior:"smooth" });
+    });
+  });
+  openModal("wheelModal");
+  requestAnimationFrame(function(){
+    cols.forEach(function(c, i){
+      c.scrollTop = startIdx[i] * ITEM;
+      markCur(c);
+    });
+  });
+}
+function wheelDone(){
+  if(!wh) return;
+  var cols = $("wheelCols").querySelectorAll(".wcol");
+  var out;
+  if(wh.type === "minutes"){
+    out = String(wh.vals[colIndex(cols[0], wh.vals.length - 1)]);
+  }else{
+    var h12 = colIndex(cols[0], 11) + 1;
+    var mm = colIndex(cols[1], 59);
+    var pm = colIndex(cols[2], 1) === 1;
+    var h24 = (h12 % 12) + (pm ? 12 : 0);
+    out = pad2(h24) + ":" + pad2(mm);
+  }
+  var cb = wh.onDone;
+  wh = null;
+  closeModal("wheelModal");
+  if(cb) cb(out);
+}
+function wheelClear(){
+  if(!wh) return;
+  var cb = wh.onClear;
+  wh = null;
+  closeModal("wheelModal");
+  if(cb) cb();
+}
+
+/* ---- form ---- */
+function setPT(pt){
+  curPT = pt;
+  $("pt-hourly").classList.toggle("on", pt === "hourly");
+  $("pt-flat").classList.toggle("on", pt === "flat");
+  $("hourlyWrap").classList.toggle("hide", pt !== "hourly");
+  $("flatWrap").classList.toggle("hide", pt !== "flat");
+}
+function autoHours(){
+  var s = spanHrs(tGet("f_start"), tGet("f_out"));
+  if(s > 0){
+    var hid = curPT === "flat" ? "f_hours2" : "f_hours";
+    if($(hid).value.trim() === "") $(hid).value = String(s);
+  }
+}
+function updateHoursHint(){
+  var s = (tGet("f_start") && tGet("f_out")) ? spanHrs(tGet("f_start"), tGet("f_out")) : 0;
+  var b1 = $("useSpan1"), b2 = $("useSpan2");
+  var hid = curPT === "flat" ? "f_hours2" : "f_hours";
+  var btn = curPT === "flat" ? b2 : b1;
+  var other = curPT === "flat" ? b1 : b2;
+  other.classList.add("hide");
+  if(s > 0 && parseFloat($(hid).value) !== s){
+    btn.textContent = "Use " + trimN(s) + " h from the times";
+    btn.classList.remove("hide");
+  }else{
+    btn.classList.add("hide");
+  }
+}
+function useSpan(){
+  var s = spanHrs(tGet("f_start"), tGet("f_out"));
+  if(s > 0){
+    $(curPT === "flat" ? "f_hours2" : "f_hours").value = String(s);
+    updateVis();
+  }
+}
+
+function resetForm(){
+  editingId = null;
+  $("formTitle").textContent = "New job";
+  ["f_title","f_company","f_loc","f_rate","f_hours","f_flat","f_hours2",
+   "f_pamt","f_fdate","f_finfo","f_fpamt","f_notes","f_pdate","f_recv"].forEach(function(id){ $(id).value = ""; });
+  $("f_date").value = todayStr();
+  tSetTime("f_start", "");
+  tSetTime("f_out", "");
+  tSetTime("f_ftime", "");
+  tSetMin("f_lmin", "30");
+  $("f_otm").value = "1.5";
+  $("f_park").value = "none";
+  ["f_pants","f_shirt","f_tie","f_shoes"].forEach(function(id){ $(id).value = ""; });
+  ["f_ot","f_lunch","f_fit","f_fitpaid","f_paid"].forEach(function(id){ $(id).checked = false; });
+  setPT("hourly");
+  $("dupBtn").classList.add("hide");
+  $("delBtn").classList.add("hide");
+  updateVis();
+}
+
+function fillForm(j){
+  $("f_title").value = j.title || "";
+  $("f_company").value = j.company || "";
+  $("f_date").value = j.date || "";
+  tSetTime("f_start", j.start || "");
+  tSetTime("f_out", j.out || "");
+  $("f_loc").value = j.location || "";
+  setPT(j.payType === "flat" ? "flat" : "hourly");
+  $("f_rate").value = j.rate || "";
+  $("f_hours").value = j.hours || "";
+  $("f_flat").value = j.flat || "";
+  $("f_hours2").value = j.hours || "";
+  $("f_ot").checked = !!j.ot;
+  $("f_otm").value = j.otMult || "1.5";
+  $("f_lunch").checked = !!j.lunch;
+  tSetMin("f_lmin", (j.lunchMin == null || j.lunchMin === "") ? "30" : j.lunchMin);
+  $("f_park").value = j.parking || "none";
+  $("f_pamt").value = j.parkingAmt || "";
+  $("f_pants").value = j.pants || "";
+  $("f_shirt").value = j.shirt || "";
+  $("f_tie").value = j.tie || "";
+  $("f_shoes").value = j.shoes || "";
+  $("f_fit").checked = !!j.fitting;
+  $("f_fdate").value = j.fitDate || "";
+  tSetTime("f_ftime", j.fitTime || "");
+  $("f_finfo").value = j.fitInfo || "";
+  $("f_fitpaid").checked = !!j.fitPaid;
+  $("f_fpamt").value = j.fitPayAmt || "";
+  $("f_notes").value = j.notes || "";
+  $("f_paid").checked = !!j.paid;
+  $("f_pdate").value = j.paidDate || "";
+  $("f_recv").value = j.paidAmount || "";
+}
+
+function readForm(){
+  return {
+    title: $("f_title").value.trim(),
+    company: $("f_company").value.trim(),
+    date: $("f_date").value,
+    start: tGet("f_start"),
+    out: tGet("f_out"),
+    location: $("f_loc").value.trim(),
+    payType: curPT,
+    rate: $("f_rate").value,
+    hours: curPT === "flat" ? $("f_hours2").value : $("f_hours").value,
+    flat: $("f_flat").value,
+    ot: $("f_ot").checked,
+    otMult: $("f_otm").value,
+    lunch: $("f_lunch").checked,
+    lunchMin: tGet("f_lmin"),
+    parking: $("f_park").value,
+    parkingAmt: $("f_pamt").value,
+    pants: $("f_pants").value,
+    shirt: $("f_shirt").value,
+    tie: $("f_tie").value,
+    shoes: $("f_shoes").value,
+    fitting: $("f_fit").checked,
+    fitDate: $("f_fdate").value,
+    fitTime: tGet("f_ftime"),
+    fitInfo: $("f_finfo").value.trim(),
+    fitPaid: $("f_fitpaid").checked,
+    fitPayAmt: $("f_fpamt").value,
+    notes: $("f_notes").value.trim(),
+    paid: $("f_paid").checked,
+    paidDate: $("f_pdate").value,
+    paidAmount: $("f_recv").value
+  };
+}
+
+function srow(label, val, cls){
+  return '<div class="srow' + (cls ? " " + cls : "") + '"><span class="sl">' +
+    esc(label) + '</span><span class="sv">' + esc(val) + "</span></div>";
+}
+
+function updateVis(){
+  $("otOpts").classList.toggle("on", $("f_ot").checked);
+  $("lunchOpts").classList.toggle("on", $("f_lunch").checked);
+  $("fitOpts").classList.toggle("on", $("f_fit").checked);
+  $("fitPayOpts").classList.toggle("on", $("f_fitpaid").checked);
+  $("paidOpts").classList.toggle("on", $("f_paid").checked);
+  var pk = $("f_park").value;
+  $("parkOpts").classList.toggle("on", pk !== "none");
+  $("parkLabel").textContent = pk === "reimburse" ? "Amount to reimburse ($)" : "Parking cost ($, your expense)";
+  updateHoursHint();
+  preview();
+}
+
+function preview(){
+  var j = readForm();
+  var c = calc(j);
+  var rows = "";
+  if(j.payType === "flat"){
+    rows += srow("Flat rate", fm(c.wage));
+    if(num(j.hours)) rows += srow("Hours on record", trimN(num(j.hours)) + " h", "note");
+  }else{
+    var hours = num(j.hours);
+    if(j.lunch && num(j.lunchMin)){
+      rows += srow("Hours", trimN(hours) + " worked, less " + trimN(num(j.lunchMin) / 60) + " h lunch = " + trimN(c.payable) + " h", "note");
+    }
+    rows += srow("Base pay, " + trimN(c.baseH) + " h at " + fmShort(num(j.rate)), fm(c.base));
+    if(j.ot && c.otH > 0){
+      rows += srow("Overtime, " + trimN(c.otH) + " h at " + (num(j.otMult) || 1.5) + "x", fm(c.otPay));
+    }
+  }
+  if(c.fitPay) rows += srow("Fitting pay", "+" + fm(c.fitPay));
+  if(c.reimb) rows += srow("Parking reimbursement", "+" + fm(c.reimb));
+  rows += srow("Total", fm(c.total), "total");
+  if(c.oop) rows += srow("Out-of-pocket parking", fm(c.oop) + ", not in total", "note");
+  $("paybox").innerHTML = rows;
+}
+
+function openNew(){
+  resetForm();
+  show("add");
+}
+function openEdit(id){
+  var j = state.jobs.find(function(x){ return x.id === id; });
+  if(!j) return;
+  editingId = id;
+  fillForm(j);
+  $("formTitle").textContent = "Edit job";
+  $("dupBtn").classList.remove("hide");
+  $("delBtn").classList.remove("hide");
+  updateVis();
+  show("add");
+}
+function saveJob(){
+  var j = readForm();
+  if(!j.title){ toast("Give the job a title first."); return; }
+  if(!j.date){ toast("Pick the job date first."); return; }
+  if(editingId){
+    var i = state.jobs.findIndex(function(x){ return x.id === editingId; });
+    if(i >= 0){
+      j.id = editingId;
+      j.created = state.jobs[i].created || Date.now();
+      state.jobs[i] = j;
+    }
+  }else{
+    j.id = uid();
+    j.created = Date.now();
+    state.jobs.push(j);
+  }
+  if(persist()){
+    toast(editingId ? "Job updated" : "Job saved");
+    render();
+    show("home");
+    resetForm();
+  }
+}
+function deleteJob(){
+  if(!editingId) return;
+  if(!confirm("Delete this job? This can’t be undone.")) return;
+  state.jobs = state.jobs.filter(function(x){ return x.id !== editingId; });
+  if(persist()){
+    toast("Job deleted");
+    render();
+    show("home");
+    resetForm();
+  }
+}
+
+/* ---- backup ---- */
+function exportJSON(){
+  return JSON.stringify({ app: "shift-daddy", exported: new Date().toISOString(), jobs: state.jobs }, null, 2);
+}
+function exportCSV(){
+  var cols = ["date","start","out","title","company","location","payType","rate","hours","flat",
+    "ot","otMult","lunch","lunchMin","parking","parkingAmt","pants","shirt","tie","shoes",
+    "fitting","fitDate","fitTime","fitInfo","fitPaid","fitPayAmt","notes","paid","paidDate","paidAmount"];
+  function q(v){ return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
+  var lines = [cols.concat(["total"]).map(q).join(",")];
+  state.jobs.slice().sort(function(a, b){ return (a.date || "").localeCompare(b.date || ""); })
+    .forEach(function(j){
+      var row = cols.map(function(k){
+        var v = j[k];
+        if(v === true) v = "yes";
+        if(v === false) v = "";
+        return q(v);
+      });
+      row.push(q(calc(j).total.toFixed(2)));
+      lines.push(row.join(","));
+    });
+  return lines.join("\n");
+}
+function copyText(text, okMsg){
+  function fallback(){
+    $("restoreBox").value = text;
+    toast("Couldn’t reach the clipboard. Copy it from the box below.");
+  }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast(okMsg); }, fallback);
+    }else{
+      fallback();
+    }
+  }catch(e){ fallback(); }
+}
+function restore(){
+  var raw = $("restoreBox").value.trim();
+  if(!raw){ toast("Paste a backup into the box first."); return; }
+  var arr = null;
+  try{
+    var p = JSON.parse(raw);
+    if(Array.isArray(p)) arr = p;
+    else if(p && Array.isArray(p.jobs)) arr = p.jobs;
+  }catch(e){}
+  if(!arr){ toast("That doesn’t look like a Shift Daddy backup."); return; }
+  arr = arr.filter(function(j){ return j && typeof j === "object"; });
+  arr.forEach(function(j){ if(!j.id) j.id = uid(); });
+  var msg = "Replace the " + state.jobs.length + " job(s) on this device with " + arr.length + " from this backup?";
+  if(!confirm(msg)) return;
+  state.jobs = arr;
+  if(persist()){
+    $("restoreBox").value = "";
+    render();
+    renderCount();
+    show("home");
+    toast("Backup restored");
+  }
+}
+function renderCount(){
+  var n = state.jobs.length;
+  $("dcount").textContent = n + (n === 1 ? " job" : " jobs") + " stored on this device (app v4)";
+}
+
+/* ---- toast ---- */
+var toastTimer;
+function toast(msg){
+  var el = $("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove("on"); }, 2600);
+}
+
+/* ---- wiring ---- */
+function init(){
+  load();
+
+  $("tab-home").addEventListener("click", function(){ render(); show("home"); });
+  $("tab-add").addEventListener("click", openNew);
+  $("tab-data").addEventListener("click", function(){ renderCount(); show("data"); });
+
+  $("filterSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-f]");
+    if(!b) return;
+    filterMode = b.getAttribute("data-f");
+    this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
+    render();
+  });
+  $("fbtn").addEventListener("click", openFilter);
+
+  $("afrow").addEventListener("click", function(e){
+    var b = e.target.closest("[data-rk]");
+    if(!b) return;
+    removeFilter(b.getAttribute("data-rk"), b.getAttribute("data-rv"));
+  });
+
+  $("view-home").addEventListener("click", function(e){
+    var t = e.target.closest("[data-act]");
+    if(!t) return;
+    var act = t.getAttribute("data-act");
+    if(act === "check"){ e.stopPropagation(); togglePaid(t.getAttribute("data-id")); }
+    else if(act === "setout"){ e.stopPropagation(); quickOut(t.getAttribute("data-id")); }
+    else if(act === "open"){ openEdit(t.getAttribute("data-id")); }
+    else if(act === "new"){ openNew(); }
+    else if(act === "clearf"){ filterState = { q:"", companies:[], titles:[], from:"", to:"" }; render(); }
+  });
+  $("view-home").addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    var t = e.target.closest('.job[data-act="open"]');
+    if(t && e.target === t){ e.preventDefault(); openEdit(t.getAttribute("data-id")); }
+  });
+
+  $("pt-hourly").addEventListener("click", function(){ setPT("hourly"); updateVis(); });
+  $("pt-flat").addEventListener("click", function(){ setPT("flat"); updateVis(); });
+
+  var controls = document.querySelectorAll("#view-add input, #view-add select, #view-add textarea");
+  controls.forEach(function(el){
+    el.addEventListener("input", updateVis);
+    el.addEventListener("change", updateVis);
+  });
+
+  /* time wheels on the form */
+  $("f_start").addEventListener("click", function(){
+    openWheel({ title:"Call time", type:"time", value:tGet("f_start"), fallback:"17:00", allowClear:true,
+      onDone:function(v){ tSetTime("f_start", v); autoHours(); updateVis(); },
+      onClear:function(){ tSetTime("f_start", ""); updateVis(); } });
+  });
+  $("f_out").addEventListener("click", function(){
+    var fb = tGet("f_start") ? addHrs(tGet("f_start"), 6) : "23:00";
+    openWheel({ title:"Out time", type:"time", value:tGet("f_out"), fallback:fb, allowClear:true,
+      onDone:function(v){ tSetTime("f_out", v); autoHours(); updateVis(); },
+      onClear:function(){ tSetTime("f_out", ""); updateVis(); } });
+  });
+  $("f_ftime").addEventListener("click", function(){
+    openWheel({ title:"Fitting time", type:"time", value:tGet("f_ftime"), fallback:"12:00", allowClear:true,
+      onDone:function(v){ tSetTime("f_ftime", v); updateVis(); },
+      onClear:function(){ tSetTime("f_ftime", ""); updateVis(); } });
+  });
+  $("f_lmin").addEventListener("click", function(){
+    openWheel({ title:"Lunch break", type:"minutes", value:tGet("f_lmin"), allowClear:false,
+      onDone:function(v){ tSetMin("f_lmin", v); updateVis(); } });
+  });
+  $("useSpan1").addEventListener("click", useSpan);
+  $("useSpan2").addEventListener("click", useSpan);
+
+  $("saveBtn").addEventListener("click", saveJob);
+  $("dupBtn").addEventListener("click", openDup);
+  $("delBtn").addEventListener("click", deleteJob);
+
+  /* filter modal */
+  $("ftApply").addEventListener("click", applyFilter);
+  $("ftClear").addEventListener("click", clearFilterAll);
+  $("filterModal").addEventListener("click", function(e){
+    if(e.target === this){ closeModal("filterModal"); return; }
+    var c = e.target.closest(".tchip");
+    if(!c) return;
+    var k = c.getAttribute("data-fk"), v = c.getAttribute("data-fv");
+    var list = k === "c" ? tmpF.companies : tmpF.titles;
+    if(inListCI(list, v)){
+      var out = list.filter(function(x){ return x.trim().toLowerCase() !== v.trim().toLowerCase(); });
+      if(k === "c") tmpF.companies = out; else tmpF.titles = out;
+      c.classList.remove("on");
+    }else{
+      list.push(v);
+      c.classList.add("on");
+    }
+  });
+
+  /* duplicate modal */
+  $("calPrev").addEventListener("click", function(){
+    calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1);
+    renderCal();
+  });
+  $("calNext").addEventListener("click", function(){
+    calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1);
+    renderCal();
+  });
+  $("calGrid").addEventListener("click", function(e){
+    var b = e.target.closest("[data-cald]");
+    if(!b) return;
+    var ds = b.getAttribute("data-cald");
+    if(dupSel[ds]){
+      delete dupSel[ds];
+      delete dupTimes[ds];
+    }else{
+      dupSel[ds] = true;
+      if(!dupTimes[ds]) dupTimes[ds] = { start: dupBaseStart, out: dupBaseOut };
+    }
+    renderCal();
+    renderDupSel();
+  });
+  $("dupList").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-dt]");
+    if(!b) return;
+    var d = b.getAttribute("data-dt"), k = b.getAttribute("data-k");
+    if(!dupTimes[d]) dupTimes[d] = { start:"", out:"" };
+    var cur = dupTimes[d][k];
+    var fb;
+    if(k === "start") fb = dupBaseStart || "17:00";
+    else fb = dupTimes[d].start ? addHrs(dupTimes[d].start, 6) : (dupBaseOut || "23:00");
+    openWheel({ title: (k === "start" ? "Call time, " : "Out time, ") + fdateShort(d),
+      type:"time", value:cur, fallback:fb, allowClear:true,
+      onDone:function(v){ dupTimes[d][k] = v; renderDupSel(); },
+      onClear:function(){ dupTimes[d][k] = ""; renderDupSel(); } });
+  });
+  $("dupGo").addEventListener("click", dupCreate);
+  $("dupModal").addEventListener("click", function(e){
+    if(e.target === this) closeModal("dupModal");
+  });
+
+  /* wheel modal */
+  $("whDone").addEventListener("click", wheelDone);
+  $("whClear").addEventListener("click", wheelClear);
+  $("wheelModal").addEventListener("click", function(e){
+    if(e.target === this){ wh = null; closeModal("wheelModal"); }
+  });
+
+  document.querySelectorAll("[data-close]").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(b.getAttribute("data-close") === "wheelModal") wh = null;
+      closeModal(b.getAttribute("data-close"));
+    });
+  });
+
+  $("copyJsonBtn").addEventListener("click", function(){ copyText(exportJSON(), "Backup copied. Paste it somewhere safe."); });
+  $("copyCsvBtn").addEventListener("click", function(){ copyText(exportCSV(), "CSV copied. Paste it into a spreadsheet."); });
+  $("restoreBtn").addEventListener("click", restore);
+
+  resetForm();
+  render();
+  renderCount();
+  show("home");
+}
+init();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./sw.js").catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
